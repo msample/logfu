@@ -196,7 +196,7 @@ func (o *Config) NextMode() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 
-	next := o.currMode + 1 // fix me race
+	next := o.currMode + 1
 	if next >= len(o.modes) {
 		next = 0
 	}
@@ -208,7 +208,7 @@ func (o *Config) PrevMode() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 
-	prev := o.currMode - 1 // fix me race
+	prev := o.currMode - 1
 	if prev < 0 {
 		prev = len(o.modes) - 1
 	}
