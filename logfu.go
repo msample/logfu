@@ -23,12 +23,8 @@ import (
 	"sync"
 	"syscall"
 
-	syslog "github.com/RackSec/srslog" // more standards compliant than log/sylog
+	// more standards compliant than log/sylog
 	"github.com/msample/log2"
-)
-
-const (
-	SyslogPriority = syslog.LOG_INFO | syslog.LOG_LOCAL2 // all syslog usage gets this setup
 )
 
 type WriterFac func() (io.Writer, error)
@@ -142,8 +138,8 @@ func New(filtererFacs []FiltererFac,
 	return rv, nil
 }
 
-// make it so SIG_USR1 calls NextMode, SIG_USR2 calls HomeMode, and
-// SIG_HUP reloads the current log mode.
+// SignalControlOn makes it so SIG_USR1 calls NextMode, SIG_USR2 calls
+// HomeMode, and SIG_HUP reloads the current log mode.
 func (o *Config) SignalControlOn() {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
@@ -172,6 +168,7 @@ func (o *Config) SignalControlOn() {
 	}(o.sigCh, o.sigStopCh)
 }
 
+// SignalControlOff ceases changing log modes in response to signals
 func (o *Config) SignalControlOff() {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
@@ -477,18 +474,6 @@ func makeLogFunc(mv *modeVals, c []Fsw) log2.LogFunc {
 		}
 		return nil
 	}
-}
-
-type FilterFunc func([]interface{}) ([]interface{}, error)
-
-func (o FilterFunc) Filter(keyvals []interface{}) ([]interface{}, error) {
-	return o(keyvals)
-}
-
-type SerializerFunc func(io.Writer, []interface{}) error
-
-func (o SerializerFunc) Serialize(w io.Writer, keyvals []interface{}) error {
-	return o(w, keyvals)
 }
 
 // modeVals holds the objects created from the factories for the current mode
