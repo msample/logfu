@@ -59,7 +59,11 @@ type Config struct {
 	sigStopCh       chan struct{}
 }
 
-type Mode map[int][]Fsw
+// Mode defines a logging configuration by specifying the log levels
+// that are not No-Ops in terms of a set of filter-serializer-writer
+// tuples.  Each log() call to a level has its keyvals fed through
+// each filterer-serializer-writer tuple for that level (if any)
+type Mode map[log2.Level][]Fsw
 
 // Fsw holds the FiltererFac, SerializerFac and WriterFac references
 // that will be used together to produce log
@@ -70,6 +74,19 @@ type Fsw struct {
 	WriterInd     int
 }
 
+// New creates log configuration modes that can be stepped through to
+// set the log2.Info, Debug etc funcs.  Change modes using the
+// NextMode, PrevMode and ChangeToMode methods. The modes defines the
+// configurtiion modes by referencing a specific combination of
+// filterer, serializer and writers factories to be used to build each
+// log level.  Filterers are given the raw log parameters and may add
+// or remove keyavls, the resulting keyvals, if any, are serailized by
+// the serializer to the writer.
+//
+// Returns a Config without applying any mode. Use ChangeToMode to set
+// the first logging mode.
+//
+// Look at the example in logfu_test.go, this is a bit clunky
 func New(filtererFacs []FiltererFac,
 	serializerFacs []SerializerFac,
 	writerFacs []WriterFac,
@@ -180,7 +197,8 @@ func (o *Config) SignalControlOff() {
 }
 
 // Recreate the current log config by re-creating the filters,
-// serializers and writers and re-swapping them into their log2 levels
+// serializers and writers and re-swapping them into their log2
+// levels (e.g. in response to HUP)
 func (o *Config) ReloadMode() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
@@ -223,6 +241,9 @@ func (o *Config) HomeMode() error {
 
 // ChangeToMode changes to the given mode index. Does nothing if
 // already in that mode unless force is true.
+//
+// Use this with force==true after first creating a Config to
+// initialize the first mode you want.
 func (o *Config) ChangeToMode(mode int, force, recreate bool) error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
@@ -413,8 +434,8 @@ func (o *Config) writersForMode(mode int) map[int]bool {
 
 // put Nop Log func in all level that are NOT in the given mode
 func swapNop(s Mode) {
-	for i := 0; i < int(log2.HIGHEST); i++ {
-		if s[i] == nil {
+	for i := log2.Level(0); i < log2.HIGHEST; i++ {
+		if s[log2.Level(i)] == nil {
 			log2.Swap(i, nil)
 		}
 	}

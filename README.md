@@ -140,6 +140,18 @@ func New(filtererFacs []FiltererFac,
 	modes []Mode,
 	recreateOnShift bool) (*Config, error)
 ```
+New creates log configuration modes that can be stepped through to set the
+log2.Info, Debug etc funcs. Change modes using the NextMode, PrevMode and
+ChangeToMode methods. The modes defines the configurtiion modes by referencing a
+specific combination of filterer, serializer and writers factories to be used to
+build each log level. Filterers are given the raw log parameters and may add or
+remove keyavls, the resulting keyvals, if any, are serailized by the serializer
+to the writer.
+
+Returns a Config without applying any mode. Use ChangeToMode to set the first
+logging mode.
+
+Look at the example in logfu_test.go, this is a bit clunky
 
 #### func (*Config) ChangeToMode
 
@@ -148,6 +160,9 @@ func (o *Config) ChangeToMode(mode int, force, recreate bool) error
 ```
 ChangeToMode changes to the given mode index. Does nothing if already in that
 mode unless force is true.
+
+Use this with force==true after first creating a Config to initialize the first
+mode you want.
 
 #### func (*Config) HomeMode
 
@@ -176,7 +191,7 @@ Shift to the previous entry in the modes slice
 func (o *Config) ReloadMode() error
 ```
 Recreate the current log config by re-creating the filters, serializers and
-writers and re-swapping them into their log2 levels
+writers and re-swapping them into their log2 levels (e.g. in response to HUP)
 
 #### func (*Config) SignalControlOff
 
@@ -256,9 +271,13 @@ func (w *LimitWriter) Write(p []byte) (n int, err error)
 #### type Mode
 
 ```go
-type Mode map[int][]Fsw
+type Mode map[log2.Level][]Fsw
 ```
 
+Mode defines a logging configuration by specifying the log levels that are not
+No-Ops in terms of a set of filter-serializer-writer tuples. Each log() call to
+a level has its keyvals fed through each filterer-serializer-writer tuple for
+that level (if any)
 
 #### func  CopyMode
 
