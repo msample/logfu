@@ -29,6 +29,100 @@ const (
 func CopyModes(m []Mode) []Mode
 ```
 
+#### func  FileWriterFac
+
+```go
+func FileWriterFac(filepath string) func() (io.Writer, error)
+```
+Returns a sync writer appending to the given file, creating the file if
+necessary. If opening the file fails (e.g. permissions) returns Stdout instead
+
+#### func  JSONSerialize
+
+```go
+func JSONSerialize(w io.Writer, kvs []interface{}) error
+```
+
+#### func  LimitWriterFac
+
+```go
+func LimitWriterFac(f func() (io.Writer, error), maxSizePerWrite int) func() (io.Writer, error)
+```
+
+#### func  LogfmtSerialize
+
+```go
+func LogfmtSerialize(w io.Writer, kvs []interface{}) error
+```
+
+#### func  MultiWriterFac
+
+```go
+func MultiWriterFac(wfs ...func() (io.Writer, error)) func() (io.Writer, error)
+```
+
+#### func  RSWriterFac
+
+```go
+func RSWriterFac(f func() (io.Writer, error)) func() (io.Writer, error)
+```
+Wraps the given Writer an add an ascii RS (record separator) before each write
+to it and an LF after. Useful for producing json-seq when each individual write
+to the wrapped writer is a JSON value.
+
+#### func  StderrWriter
+
+```go
+func StderrWriter() (io.Writer, error)
+```
+Returns a Writer to os.Stderr
+
+#### func  StdoutWriter
+
+```go
+func StdoutWriter() (io.Writer, error)
+```
+Returns a Writer to os.Stdout
+
+#### func  SyncWriterFac
+
+```go
+func SyncWriterFac(f func() (io.Writer, error)) func() (io.Writer, error)
+```
+Returns a wrapper version of the given Writer that only permits one write call
+at a time.
+
+#### func  SyslogWriterFac
+
+```go
+func SyslogWriterFac() func() (io.Writer, error)
+```
+Returns a WriterFac that returns a thread-safe local syslog writer. Uses
+SyslogPriority as the priority and os.Args[0] as the tag.
+
+If syslog client creation fails (e.g. hostname resolution fails), it returns the
+Stderr writer
+
+#### func  TCPSyslogWriterFac
+
+```go
+func TCPSyslogWriterFac(addr string) func() (io.Writer, error)
+```
+Returns a WriterFac returns a syslog TCP Writer to the given address. Addr
+format is as per log/syslog.Dial().
+
+If syslog client creation fails, it returns the Stderr() Writer instead.
+
+#### func  UDPSyslogWriterFac
+
+```go
+func UDPSyslogWriterFac(addr string) func() (io.Writer, error)
+```
+Returns a WriterFac that uses syslog UDP protocol to the given address. Addr
+format is as per log/syslog.Dial().
+
+If syslog client creation fails, it returns the Stderr() Writer instead.
+
 #### type Config
 
 ```go
@@ -89,14 +183,15 @@ writers and re-swapping them into their log2 levels
 ```go
 func (o *Config) SignalControlOff()
 ```
+SignalControlOff ceases changing log modes in response to signals
 
 #### func (*Config) SignalControlOn
 
 ```go
 func (o *Config) SignalControlOn()
 ```
-make it so SIG_USR1 calls NextMode, SIG_USR2 calls HomeMode, and SIG_HUP reloads
-the current log mode.
+SignalControlOn makes it so SIG_USR1 calls NextMode, SIG_USR2 calls HomeMode,
+and SIG_HUP reloads the current log mode.
 
 #### type FilterFunc
 
@@ -144,6 +239,20 @@ type Fsw struct {
 Fsw holds the FiltererFac, SerializerFac and WriterFac references that will be
 used together to produce log output. Filter->Serialize->Write.
 
+#### type LimitWriter
+
+```go
+type LimitWriter struct {
+}
+```
+
+
+#### func (*LimitWriter) Write
+
+```go
+func (w *LimitWriter) Write(p []byte) (n int, err error)
+```
+
 #### type Mode
 
 ```go
@@ -157,6 +266,20 @@ type Mode map[int][]Fsw
 func CopyMode(m Mode) Mode
 ```
 
+#### type RSWriter
+
+```go
+type RSWriter struct {
+}
+```
+
+
+#### func (*RSWriter) Write
+
+```go
+func (r *RSWriter) Write(p []byte) (n int, err error)
+```
+
 #### type Serializer
 
 ```go
@@ -168,6 +291,18 @@ type Serializer interface {
 Serializer converts a series of kv pairs to a single []byte and writes it to the
 given Writer in a single Write call. Use a MultiWriter to avoid unecessary
 re-serialization.
+
+#### func  JSONSerializerFac
+
+```go
+func JSONSerializerFac() Serializer
+```
+
+#### func  LogfmtSerializerFac
+
+```go
+func LogfmtSerializerFac() Serializer
+```
 
 #### type SerializerFac
 
