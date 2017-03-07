@@ -23,7 +23,6 @@ func StdoutWriter() (io.Writer, error) {
 }
 
 // Returns a sync writer appending to the given file, creating the file if necessary.
-// If opening the file fails (e.g. permissions) returns Stdout instead
 func FileWriterFac(filepath string) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY, 0666)
@@ -37,9 +36,6 @@ func FileWriterFac(filepath string) func() (io.Writer, error) {
 // Returns a WriterFac that returns a thread-safe local
 // syslog writer. Uses SyslogPriority as the priority and os.Args[0] as the
 // tag.
-//
-// If syslog client creation fails (e.g. hostname resolution fails),
-// it returns the Stderr writer
 func SyslogWriterFac() func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		w, err := syslog.New(SyslogPriority, "")
@@ -53,10 +49,6 @@ func SyslogWriterFac() func() (io.Writer, error) {
 
 // Returns a WriterFac that uses syslog UDP protocol to the given
 // address.  Addr format is as per log/syslog.Dial().
-//
-// If syslog client creation fails, it returns the Stderr() Writer
-// instead.
-//
 func UDPSyslogWriterFac(addr string) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		w, err := syslog.Dial("udp", addr, SyslogPriority, "")
@@ -70,9 +62,6 @@ func UDPSyslogWriterFac(addr string) func() (io.Writer, error) {
 
 // Returns a WriterFac returns a syslog TCP Writer to the given
 // address.  Addr format is as per log/syslog.Dial().
-//
-// If syslog client creation fails, it returns the Stderr() Writer
-// instead.
 func TCPSyslogWriterFac(addr string) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		// syslog writer has an internal mutex to make writes thread safe
@@ -159,8 +148,8 @@ func (r *RSWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-// Wraps the given Writer an add an ascii RS (record separator) before
-// each write to it and an LF after.  Useful for producing json-seq
+// Wraps the given Writer to an add an ascii RS (record separator)
+// before each write and an LF after.  Useful for producing json-seq
 // when each individual write to the wrapped writer is a JSON value.
 func RSWriterFac(f func() (io.Writer, error)) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
