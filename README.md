@@ -142,14 +142,15 @@ func New(filtererFacs []FiltererFac,
 ```
 New creates log configuration modes that can be stepped through to set the
 log2.Info, Debug etc funcs. Change modes using the NextMode, PrevMode and
-ChangeToMode methods. The modes defines the configurtiion modes by referencing a
-specific combination of filterer, serializer and writers factories to be used to
-build each log level. Filterers are given the raw log parameters and may add or
-remove keyavls, the resulting keyvals, if any, are serailized by the serializer
-to the writer.
+ChangeToMode methods. The Modes param defines the allowed configuration modes
+only one of which is in effect at a given time. Each mode references a specific
+combination of filterer, serializer and writer factories to be used to build the
+log levels. Filterers are given the raw log parameters and may add or remove
+keyavls, the resulting keyvals, if any, are serailized by the serializer to the
+writer.
 
-Returns a Config without applying any mode. Use ChangeToMode to set the first
-logging mode.
+New returns a Config without applying any mode. Use ChangeToMode to set the
+first logging mode.
 
 Look at the example in logfu_test.go, this is a bit clunky
 
