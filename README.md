@@ -35,7 +35,13 @@ func CopyModes(m []Mode) []Mode
 func FileWriterFac(filepath string) func() (io.Writer, error)
 ```
 Returns a sync writer appending to the given file, creating the file if
-necessary. If opening the file fails (e.g. permissions) returns Stdout instead
+necessary.
+
+#### func  IdentityFilter
+
+```go
+func IdentityFilter(keyvals []interface{}) ([]interface{}, error)
+```
 
 #### func  JSONSerialize
 
@@ -66,8 +72,8 @@ func MultiWriterFac(wfs ...func() (io.Writer, error)) func() (io.Writer, error)
 ```go
 func RSWriterFac(f func() (io.Writer, error)) func() (io.Writer, error)
 ```
-Wraps the given Writer an add an ascii RS (record separator) before each write
-to it and an LF after. Useful for producing json-seq when each individual write
+Wraps the given Writer to an add an ascii RS (record separator) before each
+write and an LF after. Useful for producing json-seq when each individual write
 to the wrapped writer is a JSON value.
 
 #### func  StderrWriter
@@ -100,9 +106,6 @@ func SyslogWriterFac() func() (io.Writer, error)
 Returns a WriterFac that returns a thread-safe local syslog writer. Uses
 SyslogPriority as the priority and os.Args[0] as the tag.
 
-If syslog client creation fails (e.g. hostname resolution fails), it returns the
-Stderr writer
-
 #### func  TCPSyslogWriterFac
 
 ```go
@@ -111,8 +114,6 @@ func TCPSyslogWriterFac(addr string) func() (io.Writer, error)
 Returns a WriterFac returns a syslog TCP Writer to the given address. Addr
 format is as per log/syslog.Dial().
 
-If syslog client creation fails, it returns the Stderr() Writer instead.
-
 #### func  UDPSyslogWriterFac
 
 ```go
@@ -120,8 +121,6 @@ func UDPSyslogWriterFac(addr string) func() (io.Writer, error)
 ```
 Returns a WriterFac that uses syslog UDP protocol to the given address. Addr
 format is as per log/syslog.Dial().
-
-If syslog client creation fails, it returns the Stderr() Writer instead.
 
 #### type Config
 
@@ -235,6 +234,12 @@ or remove fields from the Log call and upstream filters. If the return value
 from the Filter is zero length, the Log() call returns at that point (nothing is
 logged).
 
+#### func  IdentityFilterFac
+
+```go
+func IdentityFilterFac() (Filterer, error)
+```
+
 #### type FiltererFac
 
 ```go
@@ -286,6 +291,27 @@ that level (if any)
 func CopyMode(m Mode) Mode
 ```
 
+#### type MultiWriterCloser
+
+```go
+type MultiWriterCloser struct {
+	io.Writer // wraps all writers for Write
+}
+```
+
+
+#### func  NewMultiWriterCloser
+
+```go
+func NewMultiWriterCloser(w ...io.Writer) *MultiWriterCloser
+```
+
+#### func (*MultiWriterCloser) Close
+
+```go
+func (o *MultiWriterCloser) Close() error
+```
+
 #### type RSWriter
 
 ```go
@@ -315,13 +341,13 @@ re-serialization.
 #### func  JSONSerializerFac
 
 ```go
-func JSONSerializerFac() Serializer
+func JSONSerializerFac() (Serializer, error)
 ```
 
 #### func  LogfmtSerializerFac
 
 ```go
-func LogfmtSerializerFac() Serializer
+func LogfmtSerializerFac() (Serializer, error)
 ```
 
 #### type SerializerFac
