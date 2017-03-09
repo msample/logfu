@@ -152,9 +152,9 @@ func TestNew(t *testing.T) {
 	}
 
 	_, err := logfu.New(
-		[]logfu.FiltererFac{nil},
-		[]logfu.SerializerFac{nil, nil},
-		[]logfu.WriterFac{nil, nil},
+		[]logfu.FiltererFac{logfu.IdentityFilterFac},
+		[]logfu.SerializerFac{logfu.JSONSerializerFac, logfu.LogfmtSerializerFac},
+		[]logfu.WriterFac{logfu.StderrWriter, logfu.StdoutWriter},
 		m,
 		false)
 

@@ -123,16 +123,25 @@ func New(filtererFacs []FiltererFac,
 		}
 	}
 	for i := 0; i < len(filtererFacs); i++ {
+		if filtererFacs[i] == nil {
+			return nil, fmt.Errorf("nil filterFac not allowed: entry %v", i)
+		}
 		if !refdFiltererFacs[i] {
 			return nil, fmt.Errorf("unreferenced filterFacs entry: %v", i)
 		}
 	}
 	for i := 0; i < len(serializerFacs); i++ {
+		if serializerFacs[i] == nil {
+			return nil, fmt.Errorf("nil serializerFac not allowed: entry %v", i)
+		}
 		if !refdSerailizerFacs[i] {
 			return nil, fmt.Errorf("unreferenced serializerFacs entry: %v", i)
 		}
 	}
 	for i := 0; i < len(writerFacs); i++ {
+		if writerFacs[i] == nil {
+			return nil, fmt.Errorf("nil writerFaq not allowed: entry %v", i)
+		}
 		if !refdWriterFacs[i] {
 			return nil, fmt.Errorf("unreferenced writerFacs entry: %v", i)
 		}
@@ -480,6 +489,7 @@ func makeLogFunc(mv *modeVals, c []Fsw) log2.LogFunc {
 	}
 
 	return func(keyvals ...interface{}) error {
+		fmt.Printf("in logger2\n")
 		for i := range c2 {
 			kv, err := mv2.filters[c2[i].FilterInd].Filter(keyvals)
 			if err != nil {

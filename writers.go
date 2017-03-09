@@ -1,6 +1,7 @@
 package logfu
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -25,7 +26,7 @@ func StdoutWriter() (io.Writer, error) {
 // Returns a sync writer appending to the given file, creating the file if necessary.
 func FileWriterFac(filepath string) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
-		f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY, 0666)
+		f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			return nil, err
 		}
@@ -102,8 +103,34 @@ func MultiWriterFac(wfs ...func() (io.Writer, error)) func() (io.Writer, error) 
 			}
 			ws = append(ws, w)
 		}
-		return io.MultiWriter(ws...), nil
+		return NewMultiWriterCloser(ws...), nil
 	}
+}
+
+type MultiWriterCloser struct {
+	io.Writer             // wraps all writers for Write
+	writers   []io.Writer // maybe closers too
+}
+
+func NewMultiWriterCloser(w ...io.Writer) *MultiWriterCloser {
+	//return &MultiWriterCloser{multiW: io.MultiWriter(w...), writers: w}
+	return &MultiWriterCloser{io.MultiWriter(w...), w}
+}
+
+func (o *MultiWriterCloser) Close() error {
+	var errs []error
+	for _, w := range o.writers {
+		if c, ok := w.(io.Closer); ok {
+			err := c.Close()
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
+	if len(errs) != 0 {
+		return fmt.Errorf("Error(s) closing MultiWriterCloser: %v\n", errs)
+	}
+	return nil
 }
 
 type LimitWriter struct {
