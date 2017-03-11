@@ -306,7 +306,7 @@ func (o *Config) changeToMode(mode int, force, recreate bool) error {
 	return nil
 }
 
-// CopyModes returns deep copy of of given Mode slice. Useful if you
+// CopyModes returns a deep copy of given Mode slice. Useful if you
 // want derive a mode from another one.
 func CopyModes(m []Mode) []Mode {
 	rv := make([]Mode, 0, len(m))
