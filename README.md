@@ -28,14 +28,16 @@ const (
 ```go
 func CopyModes(m []Mode) []Mode
 ```
+CopyModes returns deep copy of of given Mode slice. Useful if you want derive a
+mode from another one.
 
 #### func  FileWriterFac
 
 ```go
 func FileWriterFac(filepath string) func() (io.Writer, error)
 ```
-Returns a sync writer appending to the given file, creating the file if
-necessary.
+Returns a sync writer that append to the given file, creating the file if
+necessary. FIXME expose file mode as param
 
 #### func  IdentityFilter
 
@@ -48,6 +50,7 @@ func IdentityFilter(keyvals []interface{}) ([]interface{}, error)
 ```go
 func JSONSerialize(w io.Writer, kvs []interface{}) error
 ```
+JSONSerialize is the JSON serializer implementation
 
 #### func  LimitWriterFac
 
@@ -60,6 +63,7 @@ func LimitWriterFac(f func() (io.Writer, error), maxSizePerWrite int) func() (io
 ```go
 func LogfmtSerialize(w io.Writer, kvs []interface{}) error
 ```
+LogfmtSerialize is the log fmt serializer implementation
 
 #### func  MultiWriterFac
 
@@ -81,14 +85,14 @@ to the wrapped writer is a JSON value.
 ```go
 func StderrWriter() (io.Writer, error)
 ```
-Returns a Writer to os.Stderr
+Returns a sync Writer to os.Stderr
 
 #### func  StdoutWriter
 
 ```go
 func StdoutWriter() (io.Writer, error)
 ```
-Returns a Writer to os.Stdout
+Returns a sync Writer to os.Stdout
 
 #### func  SyncWriterFac
 
@@ -104,7 +108,8 @@ at a time.
 func SyslogWriterFac() func() (io.Writer, error)
 ```
 Returns a WriterFac that returns a thread-safe local syslog writer. Uses
-SyslogPriority as the priority and os.Args[0] as the tag.
+SyslogPriority as the priority and "" as the tag (FIXME - expose syslog tag as
+param?)
 
 #### func  TCPSyslogWriterFac
 
@@ -290,6 +295,7 @@ that level (if any)
 ```go
 func CopyMode(m Mode) Mode
 ```
+CopyMode returns a deep copy of the given Mode
 
 #### type MultiWriterCloser
 
@@ -343,12 +349,14 @@ re-serialization.
 ```go
 func JSONSerializerFac() (Serializer, error)
 ```
+JSONSerializerFac is a factory for JSON Serializers
 
 #### func  LogfmtSerializerFac
 
 ```go
 func LogfmtSerializerFac() (Serializer, error)
 ```
+LogfmtSerializerFac is a factory for JSON Serializers
 
 #### type SerializerFac
 
@@ -363,6 +371,8 @@ type SerializerFac func() (Serializer, error)
 type SerializerFunc func(io.Writer, []interface{}) error
 ```
 
+SerializerFunc type allows you convert a serializer function to a Serializer
+interface
 
 #### func (SerializerFunc) Serialize
 
