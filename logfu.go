@@ -306,6 +306,8 @@ func (o *Config) changeToMode(mode int, force, recreate bool) error {
 	return nil
 }
 
+// CopyModes returns deep copy of of given Mode slice. Useful if you
+// want derive a mode from another one.
 func CopyModes(m []Mode) []Mode {
 	rv := make([]Mode, 0, len(m))
 	for i := range m {
@@ -314,6 +316,7 @@ func CopyModes(m []Mode) []Mode {
 	return rv
 }
 
+// CopyMode returns a deep copy of the given Mode
 func CopyMode(m Mode) Mode {
 	rv := make(Mode)
 	for k, v := range m {
@@ -324,11 +327,31 @@ func CopyMode(m Mode) Mode {
 	return rv
 }
 
+// newModeVals returns a new modeVals struct with pre-alocated filter,
+// serializer and writer silces the same size as their factory slices.
 func (o *Config) newModeVals() *modeVals {
 	return newModeVals(len(o.filtererFacs),
 		len(o.serializerFacs), len(o.writerFacs))
 }
 
+// modeValsForMode allocates, popluates and returns a modeVals struct
+// with the filterer(s), serializer(s) and writer(s) needed by the
+// requested mode.  The needed filters etc are in their modeVals slice
+// at the same index as their associated factory.  Since this modoe
+// may not require every serializer etc, the slices in the return
+// modeVals are sparse.  Any filters, serailzers or writers in the
+// current Config.mode (vs the requested mode) that are not re-used in
+// the requested mode that implement the io.Closer interface are
+// returned as well, so the caller can close them.
+//
+// THe recreate flag is important and affects whether filterers,
+// serailizers and writers used by the current Config.mode and also
+// required by the requested mode will be reused in returned modeVals
+// or new ones created with the factory.  If they are reused the will
+// not be returned in the Closer slice
+//
+// The current Config is not modified nor is the mode changed. This
+// just allocates the modeVals the requested mode requires.
 func (o *Config) modeValsForMode(mode int, recreate bool) (*modeVals, []io.Closer, error) {
 	rv := o.newModeVals()
 	ffm := o.filtersForMode(mode)
@@ -451,6 +474,11 @@ func swapNop(s Mode) {
 	}
 }
 
+// makeLogFunc returns a log func that logs to the given
+// filterer-serializer-writer tuples. This function can be swapped
+// into a log2 logfunc. The given modeVals is expect to contain the
+// filterers, serailizers, and writers referenced by the Fsw
+// slice. Use modeValsForMode() to create a suitable modeVals value.
 func makeLogFunc(mv *modeVals, c []Fsw) log2.LogFunc {
 	mv2 := mv.copy() // func created below binds the copies
 	c2 := make([]Fsw, len(c))
@@ -515,6 +543,8 @@ type modeVals struct {
 	writers     []io.Writer  // sparse, always len(Config.writerFacs), may have nil entries
 }
 
+// newModeVals returns a modeVals with filterer, serializer and writer
+// slices allocated of the requested size.
 func newModeVals(flen, slen, wlen int) *modeVals {
 	return &modeVals{
 		make([]Filterer, flen),
@@ -523,6 +553,7 @@ func newModeVals(flen, slen, wlen int) *modeVals {
 	}
 }
 
+// copy method returns a deep copy of the modeVals
 func (o *modeVals) copy() *modeVals {
 	f := make([]Filterer, len(o.filters))
 	copy(f, o.filters)

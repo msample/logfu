@@ -13,17 +13,18 @@ const (
 	SyslogPriority = syslog.LOG_INFO | syslog.LOG_LOCAL2 // all syslog usage gets this setup
 )
 
-// Returns a Writer to  os.Stderr
+// Returns a sync Writer to os.Stderr
 func StderrWriter() (io.Writer, error) {
 	return log.NewSyncWriter(os.Stderr), nil
 }
 
-// Returns a Writer to  os.Stdout
+// Returns a sync Writer to os.Stdout
 func StdoutWriter() (io.Writer, error) {
 	return log.NewSyncWriter(os.Stdout), nil
 }
 
-// Returns a sync writer appending to the given file, creating the file if necessary.
+// Returns a sync writer that append to the given file, creating the
+// file if necessary. FIXME expose file mode as param
 func FileWriterFac(filepath string) func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -34,9 +35,9 @@ func FileWriterFac(filepath string) func() (io.Writer, error) {
 	}
 }
 
-// Returns a WriterFac that returns a thread-safe local
-// syslog writer. Uses SyslogPriority as the priority and os.Args[0] as the
-// tag.
+// Returns a WriterFac that returns a thread-safe local syslog
+// writer. Uses SyslogPriority as the priority and "" as the tag
+// (FIXME - expose syslog tag as param?)
 func SyslogWriterFac() func() (io.Writer, error) {
 	return func() (io.Writer, error) {
 		w, err := syslog.New(SyslogPriority, "")
