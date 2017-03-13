@@ -345,7 +345,7 @@ func (o *Config) newModeVals() *modeVals {
 // returned as well, so the caller can close them.
 //
 // THe recreate flag is important and affects whether filterers,
-// serailizers and writers used by the current Config.mode and also
+// serializers and writers used by the current Config.mode and also
 // required by the requested mode will be reused in returned modeVals
 // or new ones created with the factory.  If they are reused the will
 // not be returned in the Closer slice

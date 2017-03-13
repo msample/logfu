@@ -29,11 +29,12 @@ import (
 
 	"github.com/msample/log2"
 	"github.com/msample/logfu/lib/lfucfg"
-	_ "github.com/msample/logfu/lib/lfuflag"
+	"github.com/msample/logfu/lib/lfuflag"
 )
 
 func main() {
 	help := flag.Bool("help", false, "print help and exit")
+	lfuflag.AddDefaultLogfuFlags()
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()
